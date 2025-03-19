@@ -1,5 +1,5 @@
 <script>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import env from '@/env.js'
 
 export default {
@@ -7,23 +7,49 @@ export default {
     const search = ref('')
     const movies = ref([])
 
+    // Фильтры
+    const selectedYear = ref('')
+    const selectedType = ref('')
+
+    // Список доступных значений для фильтрации
+    const years = computed(() => {
+      const currentYear = new Date().getFullYear()
+      return Array.from({ length: 25 }, (_, i) => currentYear - i) // Последние 25 лет
+    })
+    const types = ['movie', 'series']
+
+    const fetchMovies = () => {
+      let url = `http://www.omdbapi.com/?apikey=${env.apikey}&s=${search.value || 'movie'}`
+
+      if (selectedYear.value) url += `&y=${selectedYear.value}`
+      if (selectedType.value) url += `&type=${selectedType.value}`
+
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          movies.value = data.Search || []
+        })
+        .catch((error) => console.error('Error fetching movies:', error))
+    }
+
     const SearchMovies = () => {
-      if (search.value !== '') {
-        // console.log(search.value);
-        fetch(`http://www.omdbapi.com/?apikey=${env.apikey}&s=${search.value}`)
-          .then((res) => res.json())
-          .then((data) => {
-            movies.value = data.Search
-            search.value = ''
-            console.log(movies.value)
-          })
+      if (search.value.trim() !== '') {
+        fetchMovies()
+        search.value = ''
       }
     }
+
+    onMounted(fetchMovies)
 
     return {
       search,
       movies,
+      selectedYear,
+      selectedType,
+      years,
+      types,
       SearchMovies,
+      fetchMovies
     }
   },
 }
@@ -31,34 +57,32 @@ export default {
 
 <template>
   <main>
-    <div class="feature-card">
-      <router-link to="/movie/tt3896198">
-        <img
-          src="https://m.media-amazon.com/images/M/MV5BNWE5MGI3MDctMmU5Ni00YzI2LWEzMTQtZGIyZDA5MzQzNDBhXkEyXkFqcGc@._V1_SX300.jpg"
-          alt="Guardians of the Galaxy Vol. 2"
-          class="featured-image"
-        />
-        <div class="details">
-          <h3>Guardians of the Galaxy Vol. 2</h3>
-          <p>
-            The Guardians struggle to keep together as a team while dealing with their personal
-            family issues, notably Star-Lord's encounter with his father, the ambitious celestial
-            being Ego.
-          </p>
-        </div>
-      </router-link>
-    </div>
-
+    <!-- Форма поиска -->
     <form @submit.prevent="SearchMovies()" class="search-box">
-      <input type="text" name="search" placeholder="Search..." v-model="search" />
+      <input type="text" placeholder="Search..." v-model="search" />
       <input type="submit" value="Search" />
     </form>
 
+    <!-- Фильтры -->
+    <div class="filters">
+      <select v-model="selectedYear" @change="fetchMovies">
+        <option value="">All Years</option>
+        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+      </select>
+
+      <select v-model="selectedType" @change="fetchMovies">
+        <option value="">All Types</option>
+        <option v-for="type in types" :key="type" :value="type">{{ type }}</option>
+      </select>
+    </div>
+
+    <!-- Список фильмов -->
     <div class="movies-list">
       <div class="movie" v-for="movie in movies" :key="movie.imdbID">
         <router-link :to="'/movie/' + movie.imdbID" class="movie-link">
           <div class="movie-image">
-            <img :src="movie.Poster" :alt="movie.Title" />
+            <img :src="movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450?text=No+Image'"
+                 :alt="movie.Title" />
             <div class="type">{{ movie.Type }}</div>
           </div>
           <div class="movie-details">
@@ -70,6 +94,21 @@ export default {
     </div>
   </main>
 </template>
+
+<style scoped>
+.filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters select {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+</style>
+
 
 <style lang="scss">
 main {
