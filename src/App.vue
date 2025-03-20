@@ -14,10 +14,8 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <style lang="scss">
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Fira Sans', sans-serif;
+  //box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
 
   &::selection {
     background-color: #42b883;

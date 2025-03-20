@@ -1,251 +1,200 @@
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import env from '@/env.js'
 
 export default {
   setup() {
+    const activeTab = ref('popular')
+
+    // Данные для "Популярных"
+    const popularMovies = ref([])
+    const popularPage = ref(1)
+    const popularTotalResults = ref(0)
+
+    // Загрузка популярных фильмов и сериалов (TMDb API)
+    const fetchPopularMovies = (isLoadMore = false) => {
+      if (!isLoadMore) {
+        popularPage.value = 1
+        popularMovies.value = []
+      }
+
+      const moviesUrl = `https://api.themoviedb.org/3/movie/popular?api_key=${env.tmdbApiKey}&page=${popularPage.value}`
+      const seriesUrl = `https://api.themoviedb.org/3/tv/popular?api_key=${env.tmdbApiKey}&page=${popularPage.value}`
+
+      Promise.all([
+        fetch(moviesUrl).then((res) => res.json()),
+        fetch(seriesUrl).then((res) => res.json()),
+      ])
+        .then(([moviesData, seriesData]) => {
+          const movies = moviesData.results.map((m) => ({ ...m, media_type: 'movie' })) || []
+          const series = seriesData.results.map((s) => ({ ...s, media_type: 'tv' })) || []
+
+          popularMovies.value.push(...movies, ...series)
+
+          popularTotalResults.value =
+            (moviesData.total_results || 0) + (seriesData.total_results || 0)
+
+          console.log(popularMovies.value) // Проверяем, теперь ли есть `media_type`
+        })
+        .catch((error) =>
+          console.error('Ошибка при загрузке популярных фильмов и сериалов:', error),
+        )
+    }
+
+    const loadMorePopular = () => {
+      if (popularMovies.value.length < popularTotalResults.value) {
+        popularPage.value++
+        fetchPopularMovies(true)
+      }
+    }
+
+    // Закомментированные функции поиска
+    /*
     const search = ref('')
     const movies = ref([])
-
-    // Фильтры
     const selectedYear = ref('')
     const selectedType = ref('')
+    const currentPage = ref(1)
+    const totalResults = ref(0)
+    const sortByRating = ref(false)
 
-    // Список доступных значений для фильтрации
-    const years = computed(() => {
-      const currentYear = new Date().getFullYear()
-      return Array.from({ length: 25 }, (_, i) => currentYear - i) // Последние 25 лет
-    })
-    const types = ['movie', 'series']
+    const fetchMovies = async (isLoadMore = false) => {
+      if (!isLoadMore) {
+        currentPage.value = 1
+        movies.value = []
+      }
 
-    const fetchMovies = () => {
-      let url = `http://www.omdbapi.com/?apikey=${env.apikey}&s=${search.value || 'movie'}`
-
-      if (selectedYear.value) url += `&y=${selectedYear.value}`
+      let url = `https://api.themoviedb.org/3/search/movie?api_key=${env.tmdbApiKey}&query=${search.value || 'movie'}&language=uk-UA&page=${currentPage.value}`
+      if (selectedYear.value) url += `&year=${selectedYear.value}`
       if (selectedType.value) url += `&type=${selectedType.value}`
 
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          movies.value = data.Search || []
-        })
-        .catch((error) => console.error('Error fetching movies:', error))
+      const res = await fetch(url)
+      const data = await res.json()
+
+      if (data.results) {
+        movies.value = isLoadMore ? [...movies.value, ...data.results] : data.results
+        totalResults.value = data.total_results || 0
+      }
     }
 
     const SearchMovies = () => {
       if (search.value.trim() !== '') {
-        fetchMovies()
-        search.value = ''
+        fetchMovies(false)
       }
     }
 
-    onMounted(fetchMovies)
+    const loadMore = async () => {
+      if (movies.value.length < totalResults.value) {
+        currentPage.value++
+        await fetchMovies(true)
+      }
+    }
+    */
+
+    onMounted(() => fetchPopularMovies())
 
     return {
+      activeTab,
+      popularMovies,
+      popularTotalResults,
+      loadMorePopular,
+      // Закомментированные функции поиска
+      /*
       search,
       movies,
       selectedYear,
       selectedType,
-      years,
-      types,
+      totalResults,
       SearchMovies,
-      fetchMovies
+      loadMore
+      */
     }
   },
 }
 </script>
 
 <template>
-  <main>
-    <!-- Форма поиска -->
-    <form @submit.prevent="SearchMovies()" class="search-box">
-      <input type="text" placeholder="Search..." v-model="search" />
-      <input type="submit" value="Search" />
-    </form>
-
-    <!-- Фильтры -->
-    <div class="filters">
-      <select v-model="selectedYear" @change="fetchMovies">
-        <option value="">All Years</option>
-        <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-      </select>
-
-      <select v-model="selectedType" @change="fetchMovies">
-        <option value="">All Types</option>
-        <option v-for="type in types" :key="type" :value="type">{{ type }}</option>
-      </select>
-    </div>
-
-    <!-- Список фильмов -->
-    <div class="movies-list">
-      <div class="movie" v-for="movie in movies" :key="movie.imdbID">
-        <router-link :to="'/movie/' + movie.imdbID" class="movie-link">
-          <div class="movie-image">
-            <img :src="movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450?text=No+Image'"
-                 :alt="movie.Title" />
-            <div class="type">{{ movie.Type }}</div>
-          </div>
-          <div class="movie-details">
-            <p class="year">{{ movie.Year }}</p>
-            <h3>{{ movie.Title }}</h3>
-          </div>
-        </router-link>
+  <main class="container m-auto p-4">
+    <div class="mt-10">
+      <!-- Вкладки -->
+      <div class="tabs flex gap-4 mb-6 flex-row justify-center">
+        <button
+          class="text-3xl capitalize cursor-pointer"
+          @click="activeTab = 'popular'"
+          :class="{ 'text-blue-500 border-b-2 border-blue-500': activeTab === 'popular' }"
+        >
+          List of the Films
+        </button>
+        <!-- <button class="text-3xl uppercase cursor-pointer" @click="activeTab = 'search'"
+                :class="{ 'text-blue-500 border-b-2 border-blue-500': activeTab === 'search' }">
+          Пошук
+        </button> -->
       </div>
+
+      <!-- Вкладка "Популярные" -->
+      <div v-if="activeTab === 'popular'">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="movie bg-gray-800" v-for="movie in popularMovies" :key="movie.id">
+            <router-link :to="'/movie/' + movie.id">
+              <div class="flex md:flex-row flex-col">
+                <img
+                  :src="
+                    movie.poster_path
+                      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                      : 'https://placehold.co/300x450'
+                  "
+                  :alt="movie.original_title"
+                  class="md:w-1/2 w-64 md:m-0 pt-5 md:pt-0 m-auto h-full object-cover"
+                />
+                <div class="md:w-1/2 w-full text-left p-5 text-white relative">
+                  <p class="mt-2 mb-2 text-xl uppercase line-clamp-3">
+                    <b>{{ movie.original_title }}</b>
+                  </p>
+                  <p class="capitalize">Rating: ⭐ {{ movie.vote_average || 'N/A' }}</p>
+                  <p class="capitalize mb-5 hidden xl:flex">Release date - {{ movie.release_date || 'N/A' }}</p>
+                  <p class="xl:line-clamp-6 line-clamp-3">{{ movie.overview }}</p>
+                  <div
+                    class="capitalize absolute right-0 bottom-0 p-2 text-white"
+                    :class="movie.media_type === 'tv' ? 'bg-emerald-700' : 'bg-rose-700'"
+                  >
+                    {{ movie.media_type === 'tv' ? 'Series' : 'Movie' }}
+                  </div>
+                </div>
+              </div>
+            </router-link>
+          </div>
+        </div>
+        <button
+          v-if="popularMovies.length < popularTotalResults"
+          @click="loadMorePopular"
+          class="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+        >
+          Завантажити більше
+        </button>
+      </div>
+
+      <!-- Вкладка "Пошук" (закомментирована) -->
+      <!--
+      <div v-if="activeTab === 'search'">
+        <form @submit.prevent="SearchMovies()" class="search-box mb-4 flex gap-2">
+          <input type="text" placeholder="Пошук..." v-model="search" class="p-2 rounded border w-full" />
+          <input type="submit" value="Пошук" class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer" />
+        </form>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="movie bg-gray-800 p-2 rounded-lg" v-for="movie in movies" :key="movie.id">
+            <router-link :to="'/movie/' + movie.id">
+              <img :src="movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://placehold.co/300x450'"
+                   class="w-full h-64 object-cover rounded-lg" />
+              <p class="text-white mt-2">{{ movie.title || movie.name }} ({{ movie.release_date ? movie.release_date.slice(0, 4) : 'N/A' }})</p>
+            </router-link>
+          </div>
+        </div>
+        <button v-if="movies.length < totalResults" @click="loadMore"
+                class="bg-blue-500 text-white px-4 py-2 rounded mt-4">
+          Завантажити більше
+        </button>
+      </div>
+      -->
     </div>
   </main>
 </template>
-
-<style scoped>
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.filters select {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-</style>
-
-
-<style lang="scss">
-main {
-  .feature-card {
-    position: relative;
-
-    .featured-image {
-      display: block;
-      height: 300px;
-      width: 100%;
-      object-fit: cover;
-      position: relative;
-      z-index: 0;
-    }
-  }
-
-  .details {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: pink;
-    padding: 16px;
-    z-index: 1;
-    color: black;
-    opacity: 0.7;
-
-    h3 {
-      font-size: 24px;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-  }
-
-  .search-box {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px;
-
-    input {
-      display: block;
-      appearance: none;
-      border: none;
-      outline: none;
-      background-color: transparent;
-
-      &[type='text'] {
-        width: 100%;
-        color: white;
-        background-color: brown;
-        padding: 10px 16px;
-        margin-bottom: 16px;
-        font-size: 18px;
-
-        &::placeholder {
-          color: blue;
-        }
-
-        &:focus {
-          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-        }
-      }
-
-      &[type='submit'] {
-        width: 100%;
-        max-width: 300px;
-        background-color: red;
-        color: white;
-        font-size: 18px;
-        padding: 14px;
-        text-transform: uppercase;
-
-        &:active {
-          background-color: crimson;
-        }
-      }
-    }
-  }
-
-  .movies-list {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 0 8px;
-
-    .movie {
-      max-width: 50%;
-      flex: 1 1 50%;
-      padding: 16px 8px;
-
-      .movie-link {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-
-        .movie-image {
-          position: relative;
-          display: block;
-
-          img {
-            display: block;
-            width: 100%;
-            height: 275px;
-            object-fit: cover;
-          }
-
-          .type {
-            position: absolute;
-            padding: 8px 16px;
-            background-color: aquamarine;
-            color: white;
-            bottom: 16px;
-            left: 0;
-            text-transform: capitalize;
-          }
-        }
-
-        .movie-details {
-          background-color: gray;
-          padding: 16px 8px;
-          flex: 1 1 100%;
-          border-radius: 0 0 8px 8px;
-
-          .year {
-            color: #aaaaaa;
-            font-size: 14px;
-          }
-
-          h3 {
-            color: white;
-            font-weight: 600;
-            font-size: 18px;
-          }
-        }
-      }
-    }
-  }
-}
-</style>
