@@ -13,18 +13,18 @@ export default {
 
     onBeforeMount(async () => {
       try {
+        const type = route.path.includes('/tv/') ? 'tv' : 'movie';
         const response = await fetch(
-          `https://api.themoviedb.org/3/movie/${route.params.id}?api_key=${env.tmdbApiKey}&language=en-US`,
-        )
-        if (!response.ok) throw new Error('Failed to fetch movie data')
-        movie.value = await response.json()
-        console.log(movie)
+          `https://api.themoviedb.org/3/${type}/${route.params.id}?api_key=${env.tmdbApiKey}&language=en-US`
+        );
+        if (!response.ok) throw new Error('Failed to fetch data');
+        movie.value = await response.json();
       } catch (err) {
-        error.value = err.message
+        error.value = err.message;
       } finally {
-        loading.value = false
+        loading.value = false;
       }
-    })
+    });
 
     return {
       movie,

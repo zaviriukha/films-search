@@ -135,7 +135,7 @@ export default {
       <div v-if="activeTab === 'popular'">
         <div class="grid md:grid-cols-2 gap-4">
           <div class="movie bg-gray-800" v-for="movie in popularMovies" :key="movie.id">
-            <router-link :to="'/movie/' + movie.id">
+            <router-link :to="`/${movie.media_type}/${movie.id}`">
               <div class="flex md:flex-row flex-col">
                 <img
                   :src="
