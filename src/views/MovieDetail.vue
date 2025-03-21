@@ -24,6 +24,7 @@ export default {
       } finally {
         loading.value = false;
       }
+      console.log(movie.value)
     });
 
     return {

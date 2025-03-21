@@ -1,17 +1,29 @@
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import env from '@/env.js'
 
 export default {
   setup() {
     const activeTab = ref('popular')
 
-    // Данные для "Популярных"
+    // Popular
     const popularMovies = ref([])
     const popularPage = ref(1)
     const popularTotalResults = ref(0)
 
-    // Загрузка популярных фильмов и сериалов (TMDb API)
+    // Filters
+    const selectedYear = ref('')
+    const selectedGenre = ref('')
+    const selectedAdult = ref(false)
+    const selectedType = ref('')
+    const sortByRating = ref('desc')
+
+    const movies = ref([])
+    const currentPage = ref(1)
+    const totalResults = ref(0)
+    const genres = ref([])
+
+    // Upload Popular
     const fetchPopularMovies = (isLoadMore = false) => {
       if (!isLoadMore) {
         popularPage.value = 1
@@ -30,15 +42,10 @@ export default {
           const series = seriesData.results.map((s) => ({ ...s, media_type: 'tv' })) || []
 
           popularMovies.value.push(...movies, ...series)
-
           popularTotalResults.value =
             (moviesData.total_results || 0) + (seriesData.total_results || 0)
-
-          console.log(popularMovies.value) // Проверяем, теперь ли есть `media_type`
         })
-        .catch((error) =>
-          console.error('Ошибка при загрузке популярных фильмов и сериалов:', error),
-        )
+        .catch((error) => console.error('Ошибка при загрузке популярных фильмов:', error))
     }
 
     const loadMorePopular = () => {
@@ -48,25 +55,28 @@ export default {
       }
     }
 
-    // Закомментированные функции поиска
-    /*
-    const search = ref('')
-    const movies = ref([])
-    const selectedYear = ref('')
-    const selectedType = ref('')
-    const currentPage = ref(1)
-    const totalResults = ref(0)
-    const sortByRating = ref(false)
+    // Upload genres
+    const fetchGenres = async () => {
+      const url = `https://api.themoviedb.org/3/genre/movie/list?api_key=${env.tmdbApiKey}&language=en-US`
+      const res = await fetch(url)
+      const data = await res.json()
+      genres.value = data.genres || []
+    }
 
+    // Search filters
     const fetchMovies = async (isLoadMore = false) => {
       if (!isLoadMore) {
         currentPage.value = 1
         movies.value = []
       }
 
-      let url = `https://api.themoviedb.org/3/search/movie?api_key=${env.tmdbApiKey}&query=${search.value || 'movie'}&language=uk-UA&page=${currentPage.value}`
-      if (selectedYear.value) url += `&year=${selectedYear.value}`
-      if (selectedType.value) url += `&type=${selectedType.value}`
+      let url = `https://api.themoviedb.org/3/discover/movie?api_key=${env.tmdbApiKey}&language=en-US&page=${currentPage.value}`
+
+      if (selectedYear.value) url += `&primary_release_year=${selectedYear.value}`
+      if (selectedGenre.value) url += `&with_genres=${selectedGenre.value}`
+      if (selectedAdult.value) url += `&include_adult=true`
+      if (selectedType.value) url += `&with_keywords=${selectedType.value}`
+      url += `&sort_by=vote_average.${sortByRating.value}`
 
       const res = await fetch(url)
       const data = await res.json()
@@ -77,37 +87,36 @@ export default {
       }
     }
 
-    const SearchMovies = () => {
-      if (search.value.trim() !== '') {
-        fetchMovies(false)
-      }
-    }
-
     const loadMore = async () => {
       if (movies.value.length < totalResults.value) {
         currentPage.value++
         await fetchMovies(true)
       }
     }
-    */
 
-    onMounted(() => fetchPopularMovies())
+    watch([selectedYear, selectedGenre, selectedAdult, selectedType, sortByRating], () => {
+      fetchMovies(false)
+    })
+
+    onMounted(() => {
+      fetchPopularMovies()
+      fetchGenres()
+    })
 
     return {
       activeTab,
       popularMovies,
       popularTotalResults,
       loadMorePopular,
-      // Закомментированные функции поиска
-      /*
-      search,
       movies,
-      selectedYear,
-      selectedType,
       totalResults,
-      SearchMovies,
-      loadMore
-      */
+      loadMore,
+      selectedYear,
+      selectedGenre,
+      selectedAdult,
+      selectedType,
+      sortByRating,
+      genres,
     }
   },
 }
@@ -116,24 +125,27 @@ export default {
 <template>
   <main class="container m-auto p-4">
     <div class="mt-10">
-      <!-- Вкладки -->
+      <!-- Tabs -->
       <div class="tabs flex gap-4 mb-6 flex-row justify-center">
         <button
           class="text-3xl capitalize cursor-pointer"
           @click="activeTab = 'popular'"
           :class="{ 'text-blue-500 border-b-2 border-blue-500': activeTab === 'popular' }"
         >
-          List of the Films
+          Films
         </button>
-        <!-- <button class="text-3xl uppercase cursor-pointer" @click="activeTab = 'search'"
-                :class="{ 'text-blue-500 border-b-2 border-blue-500': activeTab === 'search' }">
-          Пошук
-        </button> -->
+        <button
+          class="text-3xl capitalize cursor-pointer"
+          @click="activeTab = 'search'"
+          :class="{ 'text-blue-500 border-b-2 border-blue-500': activeTab === 'search' }"
+        >
+          Search
+        </button>
       </div>
 
-      <!-- Вкладка "Популярные" -->
+      <!-- Popular -->
       <div v-if="activeTab === 'popular'">
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid md:grid-cols-2 gap-4 mb-5">
           <div class="movie bg-gray-800" v-for="movie in popularMovies" :key="movie.id">
             <router-link :to="`/${movie.media_type}/${movie.id}`">
               <div class="flex md:flex-row flex-col">
@@ -151,7 +163,9 @@ export default {
                     <b>{{ movie.original_title }}</b>
                   </p>
                   <p class="capitalize">Rating: ⭐ {{ movie.vote_average || 'N/A' }}</p>
-                  <p class="capitalize mb-5 hidden xl:flex">Release date - {{ movie.release_date || 'N/A' }}</p>
+                  <p class="capitalize mb-5 hidden xl:flex">
+                    Release date - {{ movie.release_date || 'N/A' }}
+                  </p>
                   <p class="xl:line-clamp-6 line-clamp-3">{{ movie.overview }}</p>
                   <div
                     class="capitalize absolute right-0 bottom-0 p-2 text-white"
@@ -167,34 +181,68 @@ export default {
         <button
           v-if="popularMovies.length < popularTotalResults"
           @click="loadMorePopular"
-          class="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+          class="bg-rose-700 text-white px-4 py-2 rounded mt-4"
         >
-          Завантажити більше
+          Load More
         </button>
       </div>
 
-      <!-- Вкладка "Пошук" (закомментирована) -->
-      <!--
+      <!-- Search -->
       <div v-if="activeTab === 'search'">
-        <form @submit.prevent="SearchMovies()" class="search-box mb-4 flex gap-2">
-          <input type="text" placeholder="Пошук..." v-model="search" class="p-2 rounded border w-full" />
-          <input type="submit" value="Пошук" class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer" />
-        </form>
+        <div class="flex flex-wrap gap-4 mb-4">
+          <input
+            v-model="selectedYear"
+            type="number"
+            min="1900"
+            max="2025"
+            placeholder="Год"
+            class="p-2 border rounded"
+          />
+
+          <select v-model="selectedGenre" class="p-2 border rounded">
+            <option value="">Ganre</option>
+            <option v-for="genre in genres" :key="genre.id" :value="genre.id">
+              {{ genre.name }}
+            </option>
+          </select>
+
+          <select v-model="selectedType" class="p-2 border rounded">
+            <option value="">Type</option>
+            <option value="movie">Movie</option>
+            <option value="tv">TV</option>
+          </select>
+
+          <select v-model="sortByRating" class="p-2 border rounded">
+            <option value="desc">Rating: down</option>
+            <option value="asc">Rating: up</option>
+          </select>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" v-model="selectedAdult" />
+            Adult
+          </label>
+        </div>
+
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="movie bg-gray-800 p-2 rounded-lg" v-for="movie in movies" :key="movie.id">
             <router-link :to="'/movie/' + movie.id">
-              <img :src="movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://placehold.co/300x450'"
-                   class="w-full h-64 object-cover rounded-lg" />
-              <p class="text-white mt-2">{{ movie.title || movie.name }} ({{ movie.release_date ? movie.release_date.slice(0, 4) : 'N/A' }})</p>
+              <img
+                :src="
+                  movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                    : 'https://placehold.co/300x450'
+                "
+                class="w-full h-64 object-cover rounded-lg"
+              />
+              <p class="text-white mt-2">
+                {{ movie.title }} ({{
+                  movie.release_date ? movie.release_date.slice(0, 4) : 'N/A'
+                }})
+              </p>
             </router-link>
           </div>
         </div>
-        <button v-if="movies.length < totalResults" @click="loadMore"
-                class="bg-blue-500 text-white px-4 py-2 rounded mt-4">
-          Завантажити більше
-        </button>
       </div>
-      -->
     </div>
   </main>
 </template>
