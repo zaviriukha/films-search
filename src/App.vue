@@ -3,10 +3,13 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <header>
-    <router-link to="/">
-      <h1><strong>Search for Movies</strong></h1>
-    </router-link>
+  <header class="flex justify-between items-center p-4 bg-gray-900 text-white shadow-md">
+    <router-link to="/" class="text-xl font-bold">Search for Movies</router-link>
+
+    <nav class="flex gap-4">
+      <router-link to="/" class="hover:text-blue-400">Films</router-link>
+      <router-link to="/search" class="hover:text-blue-400">Search</router-link>
+    </nav>
   </header>
 
   <RouterView />
@@ -14,7 +17,6 @@ import { RouterLink, RouterView } from 'vue-router'
 
 <style lang="scss">
 * {
-  //box-sizing: border-box;
   font-family: 'Arial', sans-serif;
 
   &::selection {
@@ -29,18 +31,15 @@ body {
 
 a {
   text-decoration: none;
+  color: white;
+}
+
+p {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px;
   background-color: #3c3d4e;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
-
-  h1 {
-    color: white;
-  }
 }
 </style>

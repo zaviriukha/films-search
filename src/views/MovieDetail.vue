@@ -13,19 +13,19 @@ export default {
 
     onBeforeMount(async () => {
       try {
-        const type = route.path.includes('/tv/') ? 'tv' : 'movie';
+        const type = route.path.includes('/tv/') ? 'tv' : 'movie'
         const response = await fetch(
-          `https://api.themoviedb.org/3/${type}/${route.params.id}?api_key=${env.tmdbApiKey}&language=en-US`
-        );
-        if (!response.ok) throw new Error('Failed to fetch data');
-        movie.value = await response.json();
+          `https://api.themoviedb.org/3/${type}/${route.params.id}?api_key=${env.tmdbApiKey}&language=en-US`,
+        )
+        if (!response.ok) throw new Error('Failed to fetch data')
+        movie.value = await response.json()
       } catch (err) {
-        error.value = err.message;
+        error.value = err.message
       } finally {
-        loading.value = false;
+        loading.value = false
       }
       console.log(movie.value)
-    });
+    })
 
     return {
       movie,
@@ -59,47 +59,49 @@ export default {
           <div class="max-w-full overflow-x-auto lg:overflow-visible">
             <table class="border-collapse text-lg min-w-[500px]">
               <tbody>
-              <tr v-if="movie.genres && movie.genres.length" class="border-b border-gray-600">
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Genres:</td>
-                <td class="py-2 text-left">
+                <tr v-if="movie.genres && movie.genres.length" class="border-b border-gray-600">
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Genres:</td>
+                  <td class="py-2 text-left">
                     <span v-for="(genre, index) in movie.genres" :key="genre.id">
                       {{ genre.name }}<span v-if="index < movie.genres.length - 1">, </span>
                     </span>
-                </td>
-              </tr>
-              <tr class="border-b border-gray-600">
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Rating:</td>
-                <td class="py-2 text-left">⭐ {{ movie.vote_average || 'N/A' }}</td>
-              </tr>
-              <tr class="border-b border-gray-600">
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Release Date:</td>
-                <td class="py-2 text-left">{{ movie.release_date || 'N/A' }}</td>
-              </tr>
-              <tr v-if="movie.homepage" class="border-b border-gray-600">
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Homepage:</td>
-                <td class="py-2 text-left">
-                  <a :href="movie.homepage" target="_blank" class="text-blue-400 underline">{{
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-600">
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Rating:</td>
+                  <td class="py-2 text-left">⭐ {{ movie.vote_average || 'N/A' }}</td>
+                </tr>
+                <tr class="border-b border-gray-600">
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Release Date:</td>
+                  <td class="py-2 text-left">{{ movie.release_date || 'N/A' }}</td>
+                </tr>
+                <tr v-if="movie.homepage" class="border-b border-gray-600">
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Homepage:</td>
+                  <td class="py-2 text-left">
+                    <a :href="movie.homepage" target="_blank" class="text-blue-400 underline">{{
                       movie.homepage
                     }}</a>
-                </td>
-              </tr>
-              <tr class="border-b border-gray-600">
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Original Language:</td>
-                <td class="py-2 text-left">{{ movie.original_language }}</td>
-              </tr>
-              <tr
-                v-if="movie.origin_country && movie.origin_country.length"
-                class="border-b border-gray-600"
-              >
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Origin Country:</td>
-                <td class="py-2 text-left">{{ movie.origin_country.join(', ') }}</td>
-              </tr>
-              <tr v-if="movie.production_companies && movie.production_companies.length">
-                <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Production Companies:</td>
-                <td class="py-2 text-left">
-                  {{ movie.production_companies.map((companie) => companie.name).join(', ') }}.
-                </td>
-              </tr>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-600">
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Original Language:</td>
+                  <td class="py-2 text-left">{{ movie.original_language }}</td>
+                </tr>
+                <tr
+                  v-if="movie.origin_country && movie.origin_country.length"
+                  class="border-b border-gray-600"
+                >
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">Origin Country:</td>
+                  <td class="py-2 text-left">{{ movie.origin_country.join(', ') }}</td>
+                </tr>
+                <tr v-if="movie.production_companies && movie.production_companies.length">
+                  <td class="w-1/4 pr-4 py-2 text-left font-bold align-top">
+                    Production Companies:
+                  </td>
+                  <td class="py-2 text-left">
+                    {{ movie.production_companies.map((companie) => companie.name).join(', ') }}.
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -110,4 +112,3 @@ export default {
     </div>
   </div>
 </template>
-
