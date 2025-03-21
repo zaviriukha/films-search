@@ -125,6 +125,7 @@ onMounted(() => {
                 ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
                 : 'https://placehold.co/300x450'
             "
+            :alt="movie.original_title"
             class="w-full h-96 object-cover"
           />
           <div class="text-white mt-2 p-3">

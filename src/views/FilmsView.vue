@@ -53,11 +53,12 @@ onMounted(fetchPopularMovies)
                   ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
                   : 'https://placehold.co/300x450'
               "
+              :alt="movie.original_title || movie.name"
               class="md:w-1/2 w-64 md:m-0 pt-5 md:pt-0 m-auto h-full object-cover"
             />
             <div class="md:w-1/2 w-full text-left p-5 text-white relative">
               <p class="mt-2 mb-2 text-xl uppercase line-clamp-3">
-                <b>{{ movie.original_title }}</b>
+                <b>{{ movie.original_title || movie.name }}</b>
               </p>
               <p class="capitalize">Rating: ⭐ {{ movie.vote_average || 'N/A' }}</p>
               <p class="capitalize mb-5 hidden xl:flex">

@@ -52,7 +52,7 @@ export default {
           class="w-64 h-full rounded m-auto xl:m-0"
         />
         <div class="text-lg">
-          <h2 class="text-3xl font-bold mb-4">{{ movie.original_title }}</h2>
+          <h2 class="text-3xl font-bold mb-4">{{ movie.original_title || movie.name }}</h2>
           <p class="mb-4 italic text-xl">{{ movie.tagline }}</p>
 
           <!-- Обертка для скролла -->
