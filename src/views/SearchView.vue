@@ -1,19 +1,19 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import env from '@/env.js'
 
 const selectedYear = ref('')
 const selectedGenre = ref('')
 const selectedAdult = ref(false)
-const selectedType = ref('movie') // По умолчанию 'movie'
+const selectedType = ref('movie')
 const sortByRating = ref('desc')
 
 const movies = ref([])
 const currentPage = ref(1)
 const totalResults = ref(0)
 const genres = ref([])
+const isLoading = ref(false) // Флаг загрузки данных
 
-// Генерация списка годов (текущий год и 50 лет назад)
 const years = ref([])
 const generateYears = () => {
   const currentYear = new Date().getFullYear()
@@ -28,10 +28,8 @@ const fetchGenres = async () => {
 }
 
 const fetchMovies = async (isLoadMore = false) => {
-  if (!isLoadMore) {
-    currentPage.value = 1
-    movies.value = []
-  }
+  if (isLoading.value) return // Если уже загружается, выходим
+  isLoading.value = true
 
   const apiType = selectedType.value === 'tv' ? 'discover/tv' : 'discover/movie'
 
@@ -42,8 +40,6 @@ const fetchMovies = async (isLoadMore = false) => {
   if (selectedAdult.value) url += `&include_adult=true`
   url += `&sort_by=vote_average.${sortByRating.value}`
 
-  console.log('Fetching movies from:', url) // Логируем URL
-
   try {
     const res = await fetch(url)
     const data = await res.json()
@@ -51,11 +47,24 @@ const fetchMovies = async (isLoadMore = false) => {
     if (data.results) {
       movies.value = isLoadMore ? [...movies.value, ...data.results] : data.results
       totalResults.value = data.total_results || 0
-
-      console.log(movies)
+      currentPage.value++ // Увеличиваем страницу для следующего запроса
     }
   } catch (error) {
     console.error('Error fetching movies:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Функция для подгрузки при прокрутке
+const handleScroll = () => {
+  if (isLoading.value || movies.value.length >= totalResults.value) return
+
+  const scrollPosition = window.innerHeight + window.scrollY
+  const pageHeight = document.documentElement.offsetHeight
+
+  if (scrollPosition >= pageHeight - 100) {
+    fetchMovies(true) // Загружаем следующую страницу
   }
 }
 
@@ -68,16 +77,21 @@ watch(
     rating: sortByRating.value,
   }),
   () => {
-    console.log('Filters changed (deep watch), fetching movies...')
+    currentPage.value = 1 // Сброс страницы при изменении фильтров
     fetchMovies()
   },
-  { deep: true },
+  { deep: true }
 )
 
 onMounted(() => {
   fetchGenres()
   generateYears()
-  fetchMovies() // Запрашиваем фильмы при загрузке
+  fetchMovies()
+  window.addEventListener('scroll', handleScroll) // Следим за скроллом
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll) // Очищаем обработчик
 })
 </script>
 
