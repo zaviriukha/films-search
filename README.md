@@ -2,10 +2,6 @@
 
 Search and display of information about films and TV series using the TMDB API. Built with Vue and Vite, styled with Tailwind CSS.
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
 ## Project Setup
 
 ```sh
