@@ -1,10 +1,6 @@
 # film-search
 
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Search and display of information about films and TV series using the TMDB API. Built with Vue and Vite, styled with Tailwind CSS.
 
 ## Customize configuration
 
