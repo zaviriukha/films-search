@@ -13,7 +13,7 @@ export default {
 
     onBeforeMount(async () => {
       try {
-        const type = route.path.includes('/tv/') ? 'tv' : 'movie'
+        const type = route.path.includes('/tv/') ? 'tv' : 'movie' // type of the route - movie or tv
         const response = await fetch(
           `https://api.themoviedb.org/3/${type}/${route.params.id}?api_key=${env.tmdbApiKey}&language=en-US`,
         )
@@ -24,7 +24,6 @@ export default {
       } finally {
         loading.value = false
       }
-      console.log(movie.value)
     })
 
     return {

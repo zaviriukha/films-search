@@ -44,7 +44,7 @@ onMounted(fetchPopularMovies)
     <h1 class="text-3xl text-center text-white mb-6">Popular Films</h1>
 
     <div class="grid md:grid-cols-2 gap-4 mb-5">
-      <div class="movie bg-gray-800" v-for="movie in popularMovies" :key="movie.id">
+      <div class="movie bg-slate-700" v-for="movie in popularMovies" :key="movie.id">
         <router-link :to="`/${movie.media_type}/${movie.id}`">
           <div class="flex md:flex-row flex-col">
             <img
@@ -57,7 +57,7 @@ onMounted(fetchPopularMovies)
               class="md:w-1/2 w-64 md:m-0 pt-5 md:pt-0 m-auto h-full object-cover"
             />
             <div class="md:w-1/2 w-full text-left p-5 text-white relative">
-              <p class="mt-2 mb-2 text-xl uppercase line-clamp-3">
+              <p class="mt-2 mb-2 text-xl uppercase line-clamp-3 break-words">
                 <b>{{ movie.original_title || movie.name }}</b>
               </p>
               <p class="capitalize">Rating: ⭐ {{ movie.vote_average || 'N/A' }}</p>

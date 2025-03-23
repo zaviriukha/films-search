@@ -12,7 +12,7 @@ const movies = ref([])
 const currentPage = ref(1)
 const totalResults = ref(0)
 const genres = ref([])
-const isLoading = ref(false) // Флаг загрузки данных
+const isLoading = ref(false) // upload data
 
 const years = ref([])
 const generateYears = () => {
@@ -47,7 +47,7 @@ const fetchMovies = async (isLoadMore = false) => {
     if (data.results) {
       movies.value = isLoadMore ? [...movies.value, ...data.results] : data.results
       totalResults.value = data.total_results || 0
-      currentPage.value++ // Увеличиваем страницу для следующего запроса
+      currentPage.value++ // load more movies for infinity show
     }
   } catch (error) {
     console.error('Error fetching movies:', error)
@@ -56,7 +56,7 @@ const fetchMovies = async (isLoadMore = false) => {
   }
 }
 
-// Функция для подгрузки при прокрутке
+// function for infinity load on scroll
 const handleScroll = () => {
   if (isLoading.value || movies.value.length >= totalResults.value) return
 
@@ -64,7 +64,7 @@ const handleScroll = () => {
   const pageHeight = document.documentElement.offsetHeight
 
   if (scrollPosition >= pageHeight - 100) {
-    fetchMovies(true) // Загружаем следующую страницу
+    fetchMovies(true) // load next page
   }
 }
 
@@ -77,21 +77,21 @@ watch(
     rating: sortByRating.value,
   }),
   () => {
-    currentPage.value = 1 // Сброс страницы при изменении фильтров
+    currentPage.value = 1 // clean page if filter changed
     fetchMovies()
   },
-  { deep: true }
+  { deep: true },
 )
 
 onMounted(() => {
   fetchGenres()
   generateYears()
   fetchMovies()
-  window.addEventListener('scroll', handleScroll) // Следим за скроллом
+  window.addEventListener('scroll', handleScroll) // check scroll
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll) // Очищаем обработчик
+  window.removeEventListener('scroll', handleScroll) // clean listener
 })
 </script>
 
@@ -100,25 +100,21 @@ onUnmounted(() => {
     <h1 class="text-3xl text-center text-white mb-6">Search Movies</h1>
 
     <div class="flex flex-wrap gap-4 mb-4">
-      <!-- Выбор года -->
       <select v-model="selectedYear" class="p-2 border rounded text-white">
         <option value="">Year</option>
         <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
       </select>
 
-      <!-- Выбор жанра -->
       <select v-model="selectedGenre" class="p-2 border rounded text-white">
         <option value="">Genre</option>
         <option v-for="genre in genres" :key="genre.id" :value="genre.id">{{ genre.name }}</option>
       </select>
 
-      <!-- Выбор типа контента -->
       <select v-model="selectedType" class="p-2 border rounded text-white">
         <option value="movie">Movie</option>
         <option value="tv">TV Show</option>
       </select>
 
-      <!-- Сортировка по рейтингу -->
       <select v-model="sortByRating" class="p-2 border rounded text-white">
         <option value="desc">Rating: down</option>
         <option value="asc">Rating: up</option>
@@ -131,7 +127,7 @@ onUnmounted(() => {
     </div>
 
     <div class="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-4">
-      <div class="movie bg-gray-800" v-for="movie in movies" :key="movie.id">
+      <div class="movie bg-slate-700" v-for="movie in movies" :key="movie.id">
         <router-link :to="'/movie/' + movie.id">
           <img
             :src="
@@ -143,7 +139,7 @@ onUnmounted(() => {
             class="w-full h-96 object-cover"
           />
           <div class="text-white mt-2 p-3">
-            <p class="text-xl uppercase mb-2 line-clamp-2">
+            <p class="text-xl uppercase mb-2 line-clamp-2 break-words">
               <b>{{ movie.title || movie.name }}</b>
             </p>
             <p class="capitalize">Release date: {{ movie.release_date || 'N/A' }}</p>
