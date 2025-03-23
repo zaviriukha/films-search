@@ -40,7 +40,7 @@ onMounted(fetchPopularMovies)
 </script>
 
 <template>
-  <main class="container m-auto p-4">
+  <main class="container m-auto pt-4 pb-4">
     <h1 class="text-3xl text-center text-white mb-6">Popular Films</h1>
 
     <div class="grid md:grid-cols-2 gap-4 mb-5">

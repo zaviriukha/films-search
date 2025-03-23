@@ -32,10 +32,5 @@ import { RouterLink, RouterView } from 'vue-router'
 <style lang="scss">
 * {
   font-family: 'Arial', sans-serif;
-
-  &::selection {
-    background-color: #42b883;
-    opacity: 0.5;
-  }
 }
 </style>
